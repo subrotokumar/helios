@@ -1,0 +1,27 @@
+[project]
+name = "helios"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Subroto Kumar", email = "subrotokumar@outlook.in" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "parse>=1.20.2",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+[dependency-groups]
+dev = [
+    "gunicorn>=23.0.0",
+    "mkdocs>=1.6.1",
+    "pylint>=3.3.3",
+]
+test = [
+    "pytest>=8.3.4",
+]
