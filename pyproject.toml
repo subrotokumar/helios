@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "parse>=1.20.2",
+    "pydantic>=2.10.4",
 ]
 
 [build-system]
