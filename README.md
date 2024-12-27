@@ -11,6 +11,7 @@ Helios is a lightweight Python web routing framework designed to provide a simpl
 - **Simple routing**: Define routes easily and map them to Python functions.
 - **Dynamic URL parameters**: Extract variables from the URL path.
 - **Method support**: Handle different HTTP methods (GET, POST, etc.).
+- **Template Support**: Provide basic template rendering support
 
 ## Installation
 
@@ -27,7 +28,7 @@ pip install .
 Alternatively, if Helios is hosted on PyPI, you can install it via pip:
 
 ```bash
-pip install helios
+pip install git+https:/github.com/subrotokumar/helios
 ```
 
 ## Usage
@@ -37,50 +38,62 @@ pip install helios
 Here’s a simple example of how to set up Helios with basic routing.
 
 ```python
-from helios import Helios, Request, Response
+from helios import Helios, Request, Response, HttpStatus
+from helios.middlewares import request_logger_middleware
+from typing import List
+import uuid
+from pydantic import BaseModel
 
-# Create an app instance
-app = Helios()
+class User(BaseModel):
+    id: str
+    name: str
 
-# Define a route
-@app.get('/')
-def home(req: Request, res: Response):
-    return 'Hello, World!'
+    def __init__(self, name: str):
+        super().__init__(id=str(uuid.uuid4()), name=name)
 
-@app.post('/hello/{name}')
-def greet(req: Request, res: Response, name: str):
-    res.send(f'Hello, {name}!')
+users: List[User] = [User(name="Subroto")]
 
-if __name__ == '__main__':
-    app.run()
+
+app = Helios(middlewares=[request_logger_middleware])
+
+@app.get(path="/health")
+def health_check_api(request: Request, response: Response):
+    response.send(
+        status=HttpStatus.OK,
+        body={"message": "Service is healthy"}
+    )
+
+@app.get(path="/users")
+def list_users(request: Request, response: Response):
+    response.send(
+        status=HttpStatus.OK,
+        body=[user.__dict__ for user in users]
+    )
+
+@app.post(path="/users")
+def add_user(request: Request, response: Response):
+    print(f"body {request.body}")
+    print(type(request.body))
+    new_user = User(name=request.body["name"])
+    users.append(new_user)
+    response.send(
+        status=HttpStatus.CREATED,
+        body=new_user.__dict__
+    )
 ```
 
 ### Running the App with a WSGI Server
 
 Helios is designed to run on any WSGI-compatible server. For example, using Gunicorn:
 
-1. Save your application in a file (e.g., `app.py`).
+1. Save your application in a file (e.g., `main.py`).
 2. Run the application with Gunicorn:
 
 ```bash
-gunicorn app:app
+gunicorn main:app
 ```
 
-In the above example, `app` refers to the Helios application instance, and `app.py` is the Python file containing your app.
-
-### Handling HTTP Methods
-
-You can specify the HTTP methods that your routes should handle:
-
-```python
-@app.get('/hello1/{name}')
-def greet1(req, res, name):
-    res.send(f'Hello, {name}!')
-
-@app.post('/hello2/{name}')
-def greet2(req, res, name):
-    res.send(f'Hello, {name}!')
-```
+In the above example, `app` refers to the Helios application instance, and `main.py` is the Python file containing your app.
 
 ## Supported HTTP Methods
 
